@@ -37,6 +37,8 @@ class Category(models.Model):
         # 该方法查询两次数据库，优化为在外层区分
         # nav_categories = categories.filter(is_nav=True)
         # normal_categories = categories.filter(is_nav=False)
+        print(nav_categories)
+        print(normal_categories)
         return {
             'navs': nav_categories,
             'categories': normal_categories,
