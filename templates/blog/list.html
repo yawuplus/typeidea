@@ -4,6 +4,8 @@
         <p>标签页:{{ tag.name }}</p>
     {% elif category %}
         <p>分类页: {{ category.name }}</p>
+    {% else %}
+        <p>首页</p>
     {% endif %}
 {% endblock %}
 
