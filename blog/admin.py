@@ -18,7 +18,7 @@ class PostInline(admin.TabularInline):
 @admin.register(Category, site=custom_site)
 class CategoryAdmin(BaseOwnerAdmin):
     # inlines = [PostInline, ]
-    list_display = ('name', 'status', 'is_nav', 'created_time')
+    list_display = ('name', 'status', 'is_nav', 'created_time','post_count')
     fields = ('name', 'status', 'is_nav')
 
     def post_count(self, obj):
@@ -30,7 +30,7 @@ class CategoryAdmin(BaseOwnerAdmin):
 @admin.register(Tag, site=custom_site)
 class TagAdmin(BaseOwnerAdmin):
     list_display = ('name', 'status', 'created_time')
-    fields = ('name', 'status', 'owner')
+    fields = ('name', 'status', )
 
 
 class CategoryOwnerFilter(admin.SimpleListFilter):
@@ -62,7 +62,7 @@ class PostAdmin(BaseOwnerAdmin):
     actions_on_top = True
     actions_on_bottom = True
     # 编辑页面
-    save_on_top = True
+    # save_on_top = True
     exclude = ['owner']
     # fields = (
     #     ('category', 'title'),
@@ -89,7 +89,7 @@ class PostAdmin(BaseOwnerAdmin):
             }),
         (
             '额外信息', {
-                'classes': ('collapse',),
+                'classes': ('wide',),
                 'fields': ('tag',),
             })
     )

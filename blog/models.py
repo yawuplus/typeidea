@@ -111,7 +111,7 @@ class Post(models.Model):
             category = None
             post_list = []
         else:
-            post_list = category.objects.filter(status=Post.STATUS_NORMAL).select_related('owner', 'category')
+            post_list = category.post_set.filter(status=Post.STATUS_NORMAL).select_related('owner', 'category')
         return post_list, category
 
     @classmethod
