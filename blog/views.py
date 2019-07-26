@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -17,7 +18,7 @@ class CommonViewMixin:
         return context
 
 
-class IndexView(ListView):
+class IndexView(CommonViewMixin, ListView):
     queryset = Post.latest_posts()
     # 每页数据
     paginate_by = 1
@@ -56,7 +57,9 @@ class TagView(IndexView):
         """重写queryset，根据标签过滤"""
         queryset = super().get_queryset()
         tag_id = self.kwargs.get('tag_id')
-        return queryset.filter(tag_id=tag_id)
+        # return queryset.filter(tag_id=tag_id)
+        print("{}下有{}文章".format(tag_id, queryset.filter(tag__id=tag_id)))
+        return queryset.filter(tag__id=tag_id)
 
 
 class PostDetailView(CommonViewMixin, DetailView):
@@ -65,34 +68,25 @@ class PostDetailView(CommonViewMixin, DetailView):
     context_object_name = 'post'
     pk_url_kwarg = 'post_id'
 
-# def post_list(request, category_id=None, tag_id=None):
-#     tag = None
-#     category = None
-#     if tag_id:
-#         post_list, tag = Post.get_by_tag(tag_id)
-#     elif category_id:
-#         post_list, category = Post.get_by_category(category_id)
-#     else:
-#         post_list = Post.latest_posts()
-#
-#     context = {
-#         'category': category,
-#         'tag': tag,
-#         'post_list': post_list,
-#         'sidebars': Sidebar.get_all(),
-#     }
-#     context.update(Category.get_navs())
-#     return render(request, 'blog/list.html', context=context)
-#
-#
-# def post_detail(request, post_id=None):
-#     try:
-#         post = Post.objects.get(id=post_id)
-#     except Post.DoesNotExist:
-#         post = None
-#     context = {
-#         'post': post,
-#         'sidebars': Sidebar.get_all(),
-#     }
-#     context.update(Category.get_navs())
-#     return render(request, 'blog/detail.html', context={'post': post})
+
+class SearchView(IndexView):
+    def get_context_data(self):
+        context = super().get_context_data()
+        context.update({
+            'keyword': self.request.GET.get('keyword', '')
+        })
+        return context
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        keyword = self.request.GET.get('keyword')
+        if not keyword:
+            return queryset
+        return queryset.filter(Q(title__icontains=keyword) | Q(desc__icontains=keyword))
+
+
+class AuthorView(IndexView):
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        author_id = self.kwargs.get('owner_id')
+        return queryset.filter(owner_id=author_id)
