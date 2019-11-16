@@ -5,8 +5,9 @@ from django.shortcuts import get_object_or_404
 from .models import Post, Tag, Category
 from config.models import Sidebar
 from django.views.generic import DetailView, ListView
-from comment.forms import CommentForm
-from comment.models import Comment
+from django.db.models import F
+from django.core.cache import cache
+from datetime import date
 
 
 # Create your views here.
@@ -66,16 +67,34 @@ class TagView(IndexView):
 
 class PostDetailView(CommonViewMixin, DetailView):
     queryset = Post.latest_posts()
+    # print(queryset)
     template_name = 'blog/detail.html'
     context_object_name = 'post'
     pk_url_kwarg = 'post_id'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'comment_form': CommentForm,
-            'comment_list': Comment.get_by_target(self.request.path),
-        })
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        Post.objects.filter(pk=self.object.id).update(pv=F('pv') + 1, uv=F('uv') + 1)
+        # debug
+        from django.db import connection
+        print(connection.queries)
+        return response
+
+    def handle_visited(self):
+        increased_pv = False
+        increased_uv = False
+        uid = self.request.uid
+        pv_key = 'pv:%s:%s' % (uid, self.request.path)
+        uv_key = 'uv:%s:%s:%s' % (uid, str(date.today()), self.request.path)
+        if not cache.get(pv_key):
+            increased_pv = True
+            cache.set(pv_key, 1, 1 * 60)
+        if increased_pv and increased_uv:
+            Post.objects.filter(pk=self.object.id).update(pv=F('pv') + 1, uv=F('uv') + 1)
+        elif increased_pv:
+            Post.objects.filter(pk=self.object.id).update(pv=F('pv') + 1)
+        elif increased_uv:
+            Post.objects.filter(pk=self.object.id).update(uv=F('uv') + 1)
 
 
 class SearchView(IndexView):

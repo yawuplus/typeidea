@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+import mistune
+from django.utils.functional import cached_property
 
 
 # Create your models here.
@@ -37,8 +39,8 @@ class Category(models.Model):
         # 该方法查询两次数据库，优化为在外层区分
         # nav_categories = categories.filter(is_nav=True)
         # normal_categories = categories.filter(is_nav=False)
-        print(nav_categories)
-        print(normal_categories)
+        # print(nav_categories)
+        # print(normal_categories)
         return {
             'navs': nav_categories,
             'categories': normal_categories,
@@ -85,6 +87,7 @@ class Post(models.Model):
     created_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     pv = models.PositiveIntegerField(default=1)
     uv = models.PositiveIntegerField(default=1)
+    content_html = models.TextField(verbose_name='正文html代码', blank=True, editable=False)
 
     # Meta类用于配置Model属性
     class Meta:
@@ -124,3 +127,11 @@ class Post(models.Model):
     @classmethod
     def hot_posts(cls):
         return cls.objects.filter(status=cls.STATUS_NORMAL).order_by('-pv').only('title', 'id')
+
+    def save(self, *args, **kwargs):
+        self.content_html = mistune.markdown(self.content)
+        super().save(*args, **kwargs)
+
+    @cached_property
+    def tags(self):
+        return ','.join(self.tag.values_list('name', flat=True))

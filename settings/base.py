@@ -32,7 +32,8 @@ INSTALLED_APPS = [
     'blog',
     'config',
     'comment',
-
+    'xadmin',
+    'crispy_forms',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'blog.middleware.user_id.UserMiddleware',
 ]
 
 ROOT_URLCONF = 'typeidea.urls'
