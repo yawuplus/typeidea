@@ -125,3 +125,4 @@ dmypy.json
 *.xml
 *.log
 venv/
+.idea
