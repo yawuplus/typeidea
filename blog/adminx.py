@@ -6,19 +6,28 @@ from .adminforms import PostAdminForm
 from typeidea.custom_site import custom_site
 from .models import Post, Category, Tag
 from typeidea.base_admin import BaseOwnerAdmin
+from xadmin.layout import Row, Fieldset
+from xadmin.filters import manager
+from xadmin.filters import RelatedFieldListFilter
+import xadmin
+from xadmin.layout import Row, Fieldset, Container
 
 
 class PostInline(admin.TabularInline):
-    fields = ('title', 'desc')
-    extra = 1  # 控制额外多几个
+    form_layout = (
+        Container(
+            Row('title', 'desc'),
+        )
+    )
+    extra = 1
     model = Post
 
 
 # Register your models here.
-@admin.register(Category, site=custom_site)
-class CategoryAdmin(BaseOwnerAdmin):
+@xadmin.sites.register(Category)
+class CategoryAdmin(object):
     # inlines = [PostInline, ]
-    list_display = ('name', 'status', 'is_nav', 'created_time','post_count')
+    list_display = ('name', 'status', 'is_nav', 'created_time', 'post_count')
     fields = ('name', 'status', 'is_nav')
 
     def post_count(self, obj):
@@ -27,37 +36,35 @@ class CategoryAdmin(BaseOwnerAdmin):
     post_count.short_description = '文章数量'
 
 
-@admin.register(Tag, site=custom_site)
-class TagAdmin(BaseOwnerAdmin):
+@xadmin.sites.register(Tag)
+class TagAdmin():
     list_display = ('name', 'status', 'created_time')
-    fields = ('name', 'status', )
+    fields = ('name', 'status',)
 
 
-class CategoryOwnerFilter(admin.SimpleListFilter):
-    """自定义过滤器只展示当前用户分类"""
-    title = '分类过滤器'
-    parameter_name = 'owner_category'
-
-    # 返回要展示的内容和查询用的id
-    def lookups(self, request, model_admin):
-        return Category.objects.filter(owner=request.user).values_list('id', 'name')
-
-    # 根据URL query 的内容返回列表数据
-    def queryset(self, request, queryset):
-        category_id = self.value()
-        if category_id:
-            return queryset.filter(category_id=self.value())
-        return queryset
+# class CategoryOwnerFilter(RelatedFieldListFilter):
+#     @classmethod
+#     def test(cls, field, request, params, model, admin_view, field_path):
+#         return field.name == 'category'
+#
+#     # def __init__(self, field, request, params, model, model_admin, field_path):
+#     #     super().__init__(field, request, params, model, model_admin, field_path)
+#     #     # 重新获取lookup_choices,根据owner过滤
+#     #     self.lookup_choices = Category.objects.filter(owner=
+#     #                                                   request.user).values_list('id', 'name')
 
 
-@admin.register(Post, site=custom_site)
+# manager.register(CategoryOwnerFilter, take_priority=True)
+
+
+@xadmin.sites.register(Post)
 class PostAdmin(BaseOwnerAdmin):
     form = PostAdminForm
     list_display = [
         'title', 'category', 'status', 'created_time', 'operator', 'owner'
     ]
     list_display_links = []
-    list_filter = [CategoryOwnerFilter, ]
+    # list_filter = [CategoryOwnerFilter, ]
     search_fields = ['title', 'category__name']
     actions_on_top = True
     actions_on_bottom = True
@@ -100,7 +107,7 @@ class PostAdmin(BaseOwnerAdmin):
     def operator(self, obj):
         return format_html(
             '<a href="{}">编辑</a>',
-            reverse('cus_admin:blog_post_change', args=(obj.id,))
+            reverse('xadmin:blog_post_change', args=(obj.id,))
         )
 
     operator.short_description = '操作'
@@ -111,7 +118,27 @@ class PostAdmin(BaseOwnerAdmin):
         }
         js = ('https://cdn.bootcss.com/bootstrap/4.0.0-beta.2/js/bootstrap.bundle.js')
 
+    form_layout = (
+        Fieldset(
+            '基础信息',
+            Row("title", "category"),
+            'status',
+            'tag',
+        ),
+        Fieldset(
+            '内容信息',
+            'desc',
+            'content',
+        )
+    )
 
-@admin.register(LogEntry, site=custom_site)
-class LogEntryAdmin(admin.ModelAdmin):
-    list_display = ['object_repr', 'object_id', 'action_flag', 'user', 'change_message']
+    # @property
+    # def media(self):
+    #     media = super().media
+    #     media.add_js(
+    #         ['https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js']
+    #     )
+    #     media.add_css(
+    #         ['https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css']
+    #     )
+    #     return media

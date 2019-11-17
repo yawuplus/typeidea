@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 import mistune
 from django.utils.functional import cached_property
+from ckeditor.widgets import CKEditorWidget
 
 
 # Create your models here.
