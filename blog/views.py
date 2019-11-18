@@ -1,21 +1,19 @@
-from django.db.models import Q
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from .models import Post, Tag, Category
-from config.models import Sidebar
-from django.views.generic import DetailView, ListView
-from django.db.models import F
-from django.core.cache import cache
 from datetime import date
 
+from django.core.cache import cache
+from django.db.models import Q, F
+from django.views.generic import ListView, DetailView
+from django.shortcuts import get_object_or_404
 
-# Create your views here.
+from config.models import SideBar
+from .models import Post, Category, Tag
+
+
 class CommonViewMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update({
-            'sidebars': Sidebar.get_all(),
+            'sidebars': SideBar.get_all()
         })
         context.update(Category.get_navs())
         return context
@@ -23,8 +21,7 @@ class CommonViewMixin:
 
 class IndexView(CommonViewMixin, ListView):
     queryset = Post.latest_posts()
-    # 每页数据
-    paginate_by = 1
+    paginate_by = 5
     context_object_name = 'post_list'
     template_name = 'blog/list.html'
 
@@ -40,7 +37,7 @@ class CategoryView(IndexView):
         return context
 
     def get_queryset(self):
-        """重写queryset，根据分类过滤"""
+        """ 重写querset，根据分类过滤 """
         queryset = super().get_queryset()
         category_id = self.kwargs.get('category_id')
         return queryset.filter(category_id=category_id)
@@ -57,43 +54,42 @@ class TagView(IndexView):
         return context
 
     def get_queryset(self):
-        """重写queryset，根据标签过滤"""
+        """ 重写querset，根据标签过滤 """
         queryset = super().get_queryset()
         tag_id = self.kwargs.get('tag_id')
-        # return queryset.filter(tag_id=tag_id)
-        print("{}下有{}文章".format(tag_id, queryset.filter(tag__id=tag_id)))
         return queryset.filter(tag__id=tag_id)
 
 
 class PostDetailView(CommonViewMixin, DetailView):
     queryset = Post.latest_posts()
-    # print(queryset)
     template_name = 'blog/detail.html'
     context_object_name = 'post'
     pk_url_kwarg = 'post_id'
 
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
-        Post.objects.filter(pk=self.object.id).update(pv=F('pv') + 1, uv=F('uv') + 1)
-        # debug
-        from django.db import connection
-        print(connection.queries)
+        self.handle_visited()
         return response
 
     def handle_visited(self):
-        increased_pv = False
-        increased_uv = False
+        increase_pv = False
+        increase_uv = False
         uid = self.request.uid
         pv_key = 'pv:%s:%s' % (uid, self.request.path)
-        uv_key = 'uv:%s:%s:%s' % (uid, str(date.today()), self.request.path)
         if not cache.get(pv_key):
-            increased_pv = True
-            cache.set(pv_key, 1, 1 * 60)
-        if increased_pv and increased_uv:
+            increase_pv = True
+            cache.set(pv_key, 1, 1*60)  # 1分钟有效
+
+        uv_key = 'uv:%s:%s:%s' % (uid, str(date.today()), self.request.path)
+        if not cache.get(uv_key):
+            increase_uv = True
+            cache.set(uv_key, 1, 24*60*60)  # 24小时有效
+
+        if increase_pv and increase_uv:
             Post.objects.filter(pk=self.object.id).update(pv=F('pv') + 1, uv=F('uv') + 1)
-        elif increased_pv:
+        elif increase_pv:
             Post.objects.filter(pk=self.object.id).update(pv=F('pv') + 1)
-        elif increased_uv:
+        elif increase_uv:
             Post.objects.filter(pk=self.object.id).update(uv=F('uv') + 1)
 
 

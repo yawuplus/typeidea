@@ -1,6 +1,6 @@
-# Create your views here.
 from django.shortcuts import redirect
 from django.views.generic import TemplateView
+
 from .forms import CommentForm
 
 
@@ -11,6 +11,7 @@ class CommentView(TemplateView):
     def post(self, request, *args, **kwargs):
         comment_form = CommentForm(request.POST)
         target = request.POST.get('target')
+
         if comment_form.is_valid():
             instance = comment_form.save(commit=False)
             instance.target = target
@@ -19,6 +20,7 @@ class CommentView(TemplateView):
             return redirect(target)
         else:
             succeed = False
+
         context = {
             'succeed': succeed,
             'form': comment_form,

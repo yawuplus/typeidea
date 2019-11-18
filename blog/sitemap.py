@@ -1,9 +1,10 @@
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
+
 from .models import Post
 
 
-class PostSiteMap(Sitemap):
+class PostSitemap(Sitemap):
     changefreq = "always"
     priority = 1.0
     protocol = 'https'

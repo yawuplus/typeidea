@@ -1,10 +1,11 @@
 import uuid
 
+
 USER_KEY = 'uid'
 TEN_YEARS = 60 * 60 * 24 * 365 * 10
 
 
-class UserMiddleware:
+class UserIDMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
