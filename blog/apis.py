@@ -1,18 +1,16 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAdminUser, AllowAny
+
 from .models import Post, Category
 from .serializers import (
     PostSerializer, PostDetailSerializer,
-    CategorySerializer, CategoryDetailSerializer)
-from rest_framework.decorators import api_view
+    CategorySerializer, CategoryDetailSerializer
+)
 
 
-# @api_view(['GET', 'POST', 'PUT', 'DELETE'])
-class PostViewSet(viewsets.ModelViewSet):
-    """提供文章接口"""
+class PostViewSet(viewsets.ReadOnlyModelViewSet):
+    """ 提供文章接口 """
     serializer_class = PostSerializer
     queryset = Post.objects.filter(status=Post.STATUS_NORMAL)
-    permission_classes = [AllowAny]  # 写入时校验
 
     def retrieve(self, request, *args, **kwargs):
         self.serializer_class = PostDetailSerializer
@@ -22,6 +20,8 @@ class PostViewSet(viewsets.ModelViewSet):
         category_id = self.request.query_params.get('category')
         if category_id:
             queryset = queryset.filter(category_id=category_id)
+        # 记得返回queryset
+        return queryset
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
