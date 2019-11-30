@@ -21,7 +21,7 @@ setup(
         'ipython': ['ipython==6.2.1']
     },
     scripts=[
-        'typeidea/manage.py',
+        './manage.py',
     ],
     entry_points={
         'console_scripts': [
