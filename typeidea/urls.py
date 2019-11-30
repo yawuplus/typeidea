@@ -18,6 +18,7 @@ from blog.sitemap import PostSitemap
 from config.views import LinkListView
 from comment.views import CommentView
 from .autocomplete import CategoryAutocomplete, TagAutocomplete
+from comment.views import VerifyCaptcha
 
 router = DefaultRouter()
 router.register(r'post', PostViewSet, base_name='api-post')
@@ -42,6 +43,8 @@ urlpatterns = [
                   url(r'^ckeditor/', include('ckeditor_uploader.urls')),
                   url(r'^api/', include(router.urls)),
                   url(r'^api/docs/', include_docs_urls(title='typeidea apis')),
+                  url(r'^captcha/', include('captcha.urls')),
+                  url(r'^verify_captcha/', VerifyCaptcha.as_view(), name='verify_captcha')
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

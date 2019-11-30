@@ -86,7 +86,7 @@ memcached分布式缓存，(分布式逻辑在客户端)
 #     }
 # }
 #
-REDIS_URL = '127.0.0.1:6379:1'
+REDIS_URL = 'redis://127.0.0.1:6379'
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',

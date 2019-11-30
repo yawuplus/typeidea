@@ -3,6 +3,7 @@ import markdown
 from django import forms
 
 from .models import Comment
+from captcha.fields import CaptchaField
 
 
 class CommentForm(forms.ModelForm):
@@ -13,6 +14,7 @@ class CommentForm(forms.ModelForm):
             attrs={'class': 'form-control', 'style': "width: 60%;"}
         )
     )
+    # captcha = CaptchaField()
     email = forms.CharField(
         label='Email',
         max_length=50,
