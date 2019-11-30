@@ -4,7 +4,7 @@ from django.core.cache import cache
 from django.db.models import Q, F
 from django.views.generic import ListView, DetailView
 from django.shortcuts import get_object_or_404
-
+from silk.profiling.profiler import silk_profile
 from config.models import SideBar
 from .models import Post, Category, Tag
 
@@ -78,12 +78,12 @@ class PostDetailView(CommonViewMixin, DetailView):
         pv_key = 'pv:%s:%s' % (uid, self.request.path)
         if not cache.get(pv_key):
             increase_pv = True
-            cache.set(pv_key, 1, 1*60)  # 1分钟有效
+            cache.set(pv_key, 1, 1 * 60)  # 1分钟有效
 
         uv_key = 'uv:%s:%s:%s' % (uid, str(date.today()), self.request.path)
         if not cache.get(uv_key):
             increase_uv = True
-            cache.set(uv_key, 1, 24*60*60)  # 24小时有效
+            cache.set(uv_key, 1, 24 * 60 * 60)  # 24小时有效
 
         if increase_pv and increase_uv:
             Post.objects.filter(pk=self.object.id).update(pv=F('pv') + 1, uv=F('uv') + 1)
@@ -114,3 +114,8 @@ class AuthorView(IndexView):
         queryset = super().get_queryset()
         author_id = self.kwargs.get('owner_id')
         return queryset.filter(owner_id=author_id)
+
+class CommonMixin(object):
+    @silk_profile(name='get_navs')
+    def get_navs(self):
+        data =[]

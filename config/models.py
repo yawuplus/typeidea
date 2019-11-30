@@ -69,6 +69,8 @@ class SideBar(models.Model):
 
     @classmethod
     def get_all(cls):
+        import time
+        time.sleep(10)
         return cls.objects.filter(status=cls.STATUS_SHOW)
 
     def content_html(self):
@@ -81,7 +83,7 @@ class SideBar(models.Model):
             result = self.content
         elif self.display_type == self.DISPLAY_LATEST:
             context = {
-                'posts': Post.latest_posts()
+                'posts': Post.latest_posts(with_related=False)
             }
             result = render_to_string('config/blocks/sidebar_posts.html', context)
         elif self.display_type == self.DISPLAY_HOT:
